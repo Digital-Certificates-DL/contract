@@ -10,4 +10,6 @@ interface ICertificate is IERC721, IERC721Enumerable {
         address certificateTokenAddr;
         uint256 version;
     }
+
+    event OraclesUpdated(address[] oraclesToUpdate, bool isAdding);
 }

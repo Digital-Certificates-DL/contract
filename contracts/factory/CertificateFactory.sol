@@ -13,24 +13,12 @@ import "./CertificateRegistry.sol";
  * Works together with CertificateRegistry.
  */
 contract CertificateFactory is ICertificateFactory, AbstractPoolFactory {
-    string public constant CREATE_PERMISSION = "CREATE";
+    string public constant CERTIFICATE_FACTORY_RESOURCE = "CERTIFICATE_FACTORY_RESOURCE";
 
-    string public constant PRICE_FEED_FACTORY_RESOURCE = "PRICE_FEED_FACTORY_RESOURCE";
+    string public constant CERTIFICATE_FACTORY_DEP = "CERTIFICATE_FACTORY";
+    string public constant CERTIFICATE_REGISTRY_DEP = "CERTIFICATE_REGISTRY";
 
-    string public constant PRICE_FEED_FACTORY_DEP = "PRICE_FEED_FACTORY";
-    string public constant PRICE_FEED_REGISTRY_DEP = "PRICE_FEED_REGISTRY";
-
-    modifier onlyCreatePermission() {
-        require(
-            _masterAccess.hasPermission(
-                msg.sender,
-                PRICE_FEED_FACTORY_RESOURCE,
-                CREATE_PERMISSION
-            ),
-            "CertificateFactory: access denied"
-        );
-        _;
-    }
+    CertificateRegistry internal _certificateRegistry;
 
     /**
      * @notice The function to set dependencies
@@ -41,7 +29,9 @@ contract CertificateFactory is ICertificateFactory, AbstractPoolFactory {
     function setDependencies(address registryAddress_, bytes calldata data_) public override {
         super.setDependencies(registryAddress_, data_);
 
-        _certificateRegistry = CertificateRegistry(registry_.getContract(PRICE_FEED_REGISTRY_DEP));
+        _certificateRegistry = CertificateRegistry(
+            registry_.getContract(CERTIFICATE_REGISTRY_DEP)
+        );
     }
 
     /**
@@ -49,7 +39,7 @@ contract CertificateFactory is ICertificateFactory, AbstractPoolFactory {
      */
     function deployCertificate(
         ICertificate.CertificateInitParams calldata initParams_
-    ) external override onlyCreatePermission {
+    ) external override {
         CertificateRegistry certificateRegistry_ = _certificateRegistry;
 
         string memory certificateType_ = certificateRegistry_.PRICE_FEED_NAME();
