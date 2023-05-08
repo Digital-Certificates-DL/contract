@@ -3,9 +3,6 @@ pragma solidity 0.8.17;
 
 import "@dlsl/dev-modules/contracts-registry/pools/pool-factory/AbstractPoolFactory.sol";
 
-import "@tokene/core-contracts/core/MasterAccessManagement.sol";
-import "@tokene/core-contracts/core/MasterContractsRegistry.sol";
-
 import "../interfaces/factory/ICertificateFactory.sol";
 
 import "../certificate/Certificate.sol";
@@ -22,9 +19,6 @@ contract CertificateFactory is ICertificateFactory, AbstractPoolFactory {
 
     string public constant PRICE_FEED_FACTORY_DEP = "PRICE_FEED_FACTORY";
     string public constant PRICE_FEED_REGISTRY_DEP = "PRICE_FEED_REGISTRY";
-
-    MasterAccessManagement internal _masterAccess;
-    CertificateRegistry internal _certificateRegistry;
 
     modifier onlyCreatePermission() {
         require(
@@ -47,9 +41,6 @@ contract CertificateFactory is ICertificateFactory, AbstractPoolFactory {
     function setDependencies(address registryAddress_, bytes calldata data_) public override {
         super.setDependencies(registryAddress_, data_);
 
-        MasterContractsRegistry registry_ = MasterContractsRegistry(registryAddress_);
-
-        _masterAccess = MasterAccessManagement(registry_.getMasterAccessManagement());
         _certificateRegistry = CertificateRegistry(registry_.getContract(PRICE_FEED_REGISTRY_DEP));
     }
 

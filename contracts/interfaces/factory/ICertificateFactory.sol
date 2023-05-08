@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../price-feeds/ICertificate.sol";
+import "../certificate/ICertificate.sol";
 
 /**
  * @notice The CertificateFactory contract is designed to deploy new Certificate contract instances.

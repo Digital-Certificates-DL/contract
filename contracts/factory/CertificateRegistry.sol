@@ -15,16 +15,16 @@ import "./CertificateRegistry.sol";
 contract CertificateFactory is ICertificateFactory, AbstractPoolFactory {
     string public constant CREATE_PERMISSION = "CREATE";
 
-    string public constant PRICE_FEED_FACTORY_RESOURCE = "PRICE_FEED_FACTORY_RESOURCE";
+    string public constant CERTIFICATE_FACTORY_RESOURCE = "CERTIFICATE_FACTORY_RESOURCE";
 
-    string public constant PRICE_FEED_FACTORY_DEP = "PRICE_FEED_FACTORY";
-    string public constant PRICE_FEED_REGISTRY_DEP = "PRICE_FEED_REGISTRY";
+    string public constant CERTIFICATE_FACTORY_DEP = "CERTIFICATE_FACTORY";
+    string public constant CERTIFICATE_REGISTRY_DEP = "CERTIFICATE_REGISTRY";
 
     modifier onlyCreatePermission() {
         require(
             _masterAccess.hasPermission(
                 msg.sender,
-                PRICE_FEED_FACTORY_RESOURCE,
+                CERTIFICATE_FACTORY_RESOURCE,
                 CREATE_PERMISSION
             ),
             "CertificateFactory: access denied"
@@ -44,7 +44,9 @@ contract CertificateFactory is ICertificateFactory, AbstractPoolFactory {
         MasterContractsRegistry registry_ = MasterContractsRegistry(registryAddress_);
 
         _masterAccess = MasterAccessManagement(registry_.getMasterAccessManagement());
-        _certificateRegistry = CertificateRegistry(registry_.getContract(PRICE_FEED_REGISTRY_DEP));
+        _certificateRegistry = CertificateRegistry(
+            registry_.getContract(CERTIFICATE_REGISTRY_DEP)
+        );
     }
 
     /**

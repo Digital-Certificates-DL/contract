@@ -7,14 +7,14 @@ const CertificateFactory = artifacts.require("CertificateFactory");
 module.exports = async (deployer, logger) => {
   const config = await getConfigJson();
 
-  if (config.addresses == undefined || config.addresses.MasterContractsRegistry == undefined) {
+  if (config.addresses == undefined) {
     throw new Error(`invalid config fetched`);
   }
 
   deployer.masterContractsRegistry = config.addresses.MasterContractsRegistry;
 
   const registry = await Registry.at(deployer.masterContractsRegistry);
-  d;
+
   const certificateFactory = await deployer.deploy(CertificateFactory);
 
   logger.logTransaction(

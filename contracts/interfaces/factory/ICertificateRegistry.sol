@@ -62,9 +62,7 @@ interface ICertificateRegistry {
      * @param priceFeedTokenAddr_ the address of the token for which you want to get the price feed address
      * @return the address of the price feed beacon proxy
      */
-    function priceCertificateToPools(
-        address certificateTokenAddr_
-    ) external view returns (address);
+    function certificateToPools(address certificateTokenAddr_) external view returns (address);
 
     /**
      * @notice The function to get an array of price feed addresses for an array of token addresses
@@ -84,5 +82,5 @@ interface ICertificateRegistry {
     function getCertificatesInfo(
         uint256 offset_,
         uint256 limit_
-    ) external view returns (CertificateInfo[] memory priceFeedInfoArr_);
+    ) external view returns (CertificateInfo[] memory certificateInfoArr_);
 }
