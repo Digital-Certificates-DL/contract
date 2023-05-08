@@ -6,8 +6,17 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "hardhat/console.sol";
+import "../interfaces/certificate/ICertificate.sol";
+import "@dlsl/dev-modules/contracts-registry/AbstractDependant.sol";
 
-contract Certificate is ERC721, ERC721Enumerable, ERC721URIStorage {
+contract Certificate is
+    ICertificate,
+    ERC721,
+    ERC721Enumerable,
+    ERC721URIStorage,
+    AbstractDependant,
+    Initializable
+{
     using Counters for Counters.Counter;
 
     mapping(address => bool) private owners;
@@ -19,7 +28,11 @@ contract Certificate is ERC721, ERC721Enumerable, ERC721URIStorage {
         _;
     }
 
-    constructor() ERC721("MyToken", "MTK") {
+    function __Certificate_init(CertificateInitParams calldata params_) external initializer {
+        description = params_.description;
+        version = params_.version;
+        owners[msg.sender] = true;
+        ERC721(params_.name, params_.symbol);
         owners[msg.sender] = true;
     }
 
