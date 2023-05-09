@@ -107,12 +107,6 @@ interface ITokenFactory {
     function tokenContractsBeacon() external view returns (ProxyBeacon);
 
     /**
-     * @notice The function that returns the price decimals value
-     * @return price decimals value
-     */
-    function priceDecimals() external view returns (uint8);
-
-    /**
      * @notice The function that returns the base token contracts URI string
      * @return base token contracts URI string
      */

@@ -217,6 +217,7 @@ describe("TokenFactory", () => {
       const result = await tokenFactory.getBaseTokenContractsInfo(tokenContractsArr);
 
       for (let i = 0; i < tokenContractsArr.length; i++) {
+        console.log(result[i].tokenContractAddr);
         assert.equal(result[i].tokenContractAddr, tokenContractsArr[i]);
       }
     });

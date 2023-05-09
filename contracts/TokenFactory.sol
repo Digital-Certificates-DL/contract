@@ -7,6 +7,8 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgra
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+import "hardhat/console.sol";
+
 import "@dlsl/dev-modules/pool-contracts-registry/pool-factory/PublicBeaconProxy.sol";
 import "@dlsl/dev-modules/pool-contracts-registry/ProxyBeacon.sol";
 import "@dlsl/dev-modules/libs/arrays/Paginator.sol";
@@ -19,7 +21,7 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, UUPSUpgradeable, EIP
     using Paginator for EnumerableSet.AddressSet;
 
     ProxyBeacon public override tokenContractsBeacon;
-    uint8 public override priceDecimals;
+
     string public override baseTokenContractsURI;
 
     EnumerableSet.AddressSet internal _tokenContracts;
@@ -71,12 +73,16 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, UUPSUpgradeable, EIP
             "TokenFactory: TokenContract with such id already exists."
         );
 
+        console.log("deploy address ", msg.sender);
+
         //    require(isAdmin(signer_), "TokenFactory: Invalid signature.");
 
         address newTokenContract_ = address(
             new PublicBeaconProxy(address(tokenContractsBeacon), "")
         );
 
+        console.log("new_ address ", newTokenContract_);
+        console.log("address(this) ", address(this));
         ITokenContract(newTokenContract_).__TokenContract_init(
             ITokenContract.TokenContractInitParams(
                 params_.tokenName,

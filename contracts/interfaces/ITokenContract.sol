@@ -95,7 +95,7 @@ interface ITokenContract {
      * @param tokenURI_ the tokenURI string
 
      */
-    function mintToken(string memory tokenURI_) external payable;
+    function mintToken(address to, string memory tokenURI_) external payable;
 
     /*
      * @notice The function that returns the address of the token factory

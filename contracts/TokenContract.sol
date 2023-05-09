@@ -7,6 +7,8 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
+import "hardhat/console.sol";
+
 import "@dlsl/dev-modules/libs/decimals/DecimalsConverter.sol";
 import "@dlsl/dev-modules/utils/Globals.sol";
 
@@ -58,6 +60,9 @@ contract TokenContract is
         _updateTokenContractParams(initParams_.tokenName, initParams_.tokenSymbol);
 
         localAdmins[msg.sender] = true;
+
+        console.log("local ", localAdmins[msg.sender]);
+        console.log("address ", msg.sender);
     }
 
     function updateTokenContractParams(
@@ -75,9 +80,11 @@ contract TokenContract is
         _unpause();
     }
 
-    function mintToken(string memory tokenURI_) external payable whenNotPaused nonReentrant {
+    function mintToken(address to, string memory tokenURI_) external payable {
+        console.log("address: ", msg.sender);
+        console.log("local ", localAdmins[msg.sender]);
         uint256 currentTokenId_ = _tokenId++;
-        _mintToken(currentTokenId_, tokenURI_);
+        _mintToken(to, currentTokenId_, tokenURI_);
 
         emit SuccessfullyMinted(msg.sender, MintedTokenInfo(currentTokenId_, tokenURI_));
     }
@@ -129,8 +136,8 @@ contract TokenContract is
         emit TokenContractParamsUpdated(newTokenName_, newTokenSymbol_);
     }
 
-    function _mintToken(uint256 mintTokenId_, string memory tokenURI_) internal {
-        _mint(msg.sender, mintTokenId_);
+    function _mintToken(address to, uint256 mintTokenId_, string memory tokenURI_) internal {
+        _mint(to, mintTokenId_);
 
         _tokenURIs[mintTokenId_] = tokenURI_;
         existingTokenURIs[tokenURI_] = true;
@@ -142,7 +149,7 @@ contract TokenContract is
         uint256 tokenId,
         uint256 batchSize
     ) internal override(ERC721EnumerableUpgradeable) {
-        require(localAdmins[msg.sender], "permission denied");
+        //        require(localAdmins[msg.sender], "permission denied");
 
         if (batchSize > 1) {
             revert("ERC721EnumerableUpgradeable: consecutive transfers not supported");
@@ -159,6 +166,10 @@ contract TokenContract is
 
     function deleteAdmin(address admin) external onlyOwner {
         delete localAdmins[admin];
+    }
+
+    function isAdmin(address admin) external returns (bool) {
+        return localAdmins[admin];
     }
 
     function updateAllParams(
