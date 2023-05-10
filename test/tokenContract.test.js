@@ -15,8 +15,7 @@ TokenFactory.numberFormat = "BigNumber";
 describe("TokenFactory", () => {
   const reverter = new Reverter();
 
-  const defaultTokenURI = "some uri";
-  const baseTokenContractsURI = "base uri/";
+  const baseTokenContractsURI = "ipfs://";
 
   const defaultTokenContractId = "0";
   const defaultTokenName = "tokenName";
@@ -35,8 +34,6 @@ describe("TokenFactory", () => {
     tokenName_ = defaultTokenName,
     tokenSymbol_ = defaultTokenSymbol,
   }) {
-    console.log(tokenContractId_, tokenName_, tokenSymbol_);
-    // console.log(tokenFactorys)
     return await tokenFactory.deployTokenContract([tokenContractId_, tokenName_, tokenSymbol_], { from: OWNER });
   }
 
@@ -45,11 +42,6 @@ describe("TokenFactory", () => {
     USER1 = await accounts(1);
     ADMIN1 = await accounts(2);
     ADMIN2 = await accounts(3);
-
-    console.log("OWNER ", OWNER);
-    console.log("USER1 ", USER1);
-    console.log("ADMIN1 ", ADMIN1);
-    console.log("ADMIN2 ", ADMIN2);
 
     tokenFactoryImpl = await TokenFactory.new();
     const _tokenFactoryProxy = await PublicERC1967Proxy.new(tokenFactoryImpl.address, "0x");
@@ -74,10 +66,9 @@ describe("TokenFactory", () => {
       await deployNewTokenContract({});
 
       const tokenID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
-      console.log("tokenID ", tokenID);
+
       tokenContract = await TokenContract.at(tokenID);
 
-      console.log("address mint ", OWNER);
       await tokenContract.mintToken(USER1, "test link");
     });
   });
@@ -87,11 +78,75 @@ describe("TokenFactory", () => {
       await deployNewTokenContract({});
 
       const tokenID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
-      console.log("tokenID ", tokenID);
-      tokenContract = await TokenContract.at(tokenID);
 
-      console.log("address mint ", OWNER);
-      await tokenContract.mintToken(USER1, "test link");
+      const tokenContract = await TokenContract.at(tokenID);
+
+      const tx = await tokenContract.mintToken(USER1, "test link");
+    });
+  });
+  describe("safeMint", () => {
+    it("should mint correctly and return correct uri", async () => {
+      await deployNewTokenContract({});
+
+      const tokenID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
+
+      const tokenContract = await TokenContract.at(tokenID);
+
+      assert.equal(await tokenContract.balanceOf(USER1), "0");
+      await tokenContract.mintToken(USER1, "test", { from: OWNER });
+      assert.equal(await tokenContract.tokenURI(0), "ipfs://test");
+      assert.equal(await tokenContract.balanceOf(USER1), "1");
+    });
+  });
+  describe("mint token: check  permission", () => {
+    it("should mint token", async () => {
+      await deployNewTokenContract({});
+
+      const tokenID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
+      const tokenContract = await TokenContract.at(tokenID);
+
+      assert.equal(await tokenContract.balanceOf(USER1), "0");
+      await tokenContract.mintToken(USER1, "test", { from: OWNER });
+      assert.equal(await tokenContract.tokenURI(0), "ipfs://test");
+      assert.equal(await tokenContract.balanceOf(USER1), "1");
+    });
+    it("shouldn't mint token", async () => {
+      const reason = "permission denied";
+      await deployNewTokenContract({});
+      const tokenID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
+      const tokenContract = await TokenContract.at(tokenID);
+      assert.equal(await tokenContract.balanceOf(USER1), "0");
+      await truffleAssert.reverts(tokenContract.mintToken(USER1, "test", { from: USER1 }), reason);
+    });
+
+    describe("transfer", () => {
+      it("should transfer", async () => {
+        await deployNewTokenContract({});
+
+        const constractID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
+        const tokenContract = await TokenContract.at(constractID);
+
+        await tokenContract.mintToken(USER1, "test");
+
+        await tokenContract.transferToken(USER1, OWNER, 0), { from: OWNER };
+
+        assert.equal(await tokenContract.balanceOf(USER1), "0");
+        assert.equal(await tokenContract.balanceOf(OWNER), "1");
+        await tokenContract.burn(0);
+      });
+      it("shouldn't transfer", async () => {
+        const reason = "permission denied";
+        await deployNewTokenContract({});
+
+        const constractID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
+        const tokenContract = await TokenContract.at(constractID);
+
+        await tokenContract.mintToken(USER1, "test");
+
+        await truffleAssert.reverts(tokenContract.transferToken(USER1, OWNER, 0, { from: ADMIN2 }), reason);
+
+        await tokenContract.burn(0);
+      });
     });
   });
 });

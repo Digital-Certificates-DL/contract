@@ -35,8 +35,6 @@ describe("TokenFactory", () => {
     tokenName_ = defaultTokenName,
     tokenSymbol_ = defaultTokenSymbol,
   }) {
-    console.log(tokenContractId_, tokenName_, tokenSymbol_);
-    // console.log(tokenFactorys)
     return await tokenFactory.deployTokenContract(
       [tokenContractId_, tokenName_, tokenSymbol_],
 
@@ -217,7 +215,6 @@ describe("TokenFactory", () => {
       const result = await tokenFactory.getBaseTokenContractsInfo(tokenContractsArr);
 
       for (let i = 0; i < tokenContractsArr.length; i++) {
-        console.log(result[i].tokenContractAddr);
         assert.equal(result[i].tokenContractAddr, tokenContractsArr[i]);
       }
     });

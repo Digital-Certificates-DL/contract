@@ -6,7 +6,7 @@ import "./ITokenFactory.sol";
 /**
  * This is a TokenContract, which is an ERC721 token.
  * This contract allows users to buy NFT tokens for any ERC20 token and native currency, provided the admin signs off on the necessary data.
- * System admins can update the parameters, as well as pause the purchase
+ * System admins can update the parameters
  * All funds for which users buy tokens can be withdrawn by the main owner of the system.
  */
 interface ITokenContract {
@@ -83,20 +83,10 @@ interface ITokenContract {
     function updateAllParams(string memory newTokenName_, string memory newTokenSymbol_) external;
 
     /*
-     * @notice The function for pausing mint functionality
-     */
-    function pause() external;
-
-    /*
-     * @notice The function for unpausing mint functionality
-     */
-    function unpause() external;
-
-    /*
      * @param tokenURI_ the tokenURI string
 
      */
-    function mintToken(address to, string memory tokenURI_) external payable;
+    function mintToken(address to, string memory tokenURI_) external returns (uint256);
 
     /*
      * @notice The function that returns the address of the token factory

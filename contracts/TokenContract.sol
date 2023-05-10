@@ -3,11 +3,9 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-
-import "hardhat/console.sol";
 
 import "@dlsl/dev-modules/libs/decimals/DecimalsConverter.sol";
 import "@dlsl/dev-modules/utils/Globals.sol";
@@ -23,7 +21,6 @@ contract TokenContract is
     IOwnable,
     ERC721EnumerableUpgradeable,
     EIP712Upgradeable,
-    PausableUpgradeable,
     ReentrancyGuardUpgradeable,
     ERC721Holder
 {
@@ -60,9 +57,6 @@ contract TokenContract is
         _updateTokenContractParams(initParams_.tokenName, initParams_.tokenSymbol);
 
         localAdmins[initParams_.admin] = true;
-
-        console.log("local ", localAdmins[initParams_.admin]);
-        console.log("admin address ", initParams_.admin);
     }
 
     function updateTokenContractParams(
@@ -72,21 +66,12 @@ contract TokenContract is
         _updateTokenContractParams(newTokenName_, newTokenSymbol_);
     }
 
-    function pause() external override onlyAdmin {
-        _pause();
-    }
-
-    function unpause() external override onlyAdmin {
-        _unpause();
-    }
-
-    function mintToken(address to, string memory tokenURI_) external payable {
-        console.log("address: ", msg.sender);
-        console.log("local ", localAdmins[msg.sender]);
+    function mintToken(address to, string memory tokenURI_) external returns (uint256) {
         uint256 currentTokenId_ = _tokenId++;
         _mintToken(to, currentTokenId_, tokenURI_);
 
         emit SuccessfullyMinted(msg.sender, MintedTokenInfo(currentTokenId_, tokenURI_));
+        return currentTokenId_;
     }
 
     function getUserTokenIDs(
@@ -150,7 +135,6 @@ contract TokenContract is
         uint256 batchSize
     ) internal override(ERC721EnumerableUpgradeable) {
         require(localAdmins[msg.sender], "permission denied");
-
         if (batchSize > 1) {
             revert("ERC721EnumerableUpgradeable: consecutive transfers not supported");
         }
@@ -176,4 +160,20 @@ contract TokenContract is
         string memory newTokenName_,
         string memory newTokenSymbol_
     ) external {}
+
+    function transferToken(address from, address to, uint tokenId) external onlyOwner {
+        transferFrom(from, to, tokenId);
+    }
+
+    function transferFrom(address from, address to, uint256 tokenId) public override onlyOwner {
+        _transfer(from, to, tokenId);
+    }
+
+    function _burn(uint256 tokenId) internal override(ERC721Upgradeable) {
+        super._burn(tokenId);
+    }
+
+    function burn(uint256 tokenId) external onlyOwner {
+        _burn(tokenId);
+    }
 }

@@ -73,19 +73,12 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, UUPSUpgradeable, EIP
             "TokenFactory: TokenContract with such id already exists."
         );
 
-        console.log("deploy address ", msg.sender);
-
-        //    require(isAdmin(signer_), "TokenFactory: Invalid signature.");
-
         address newTokenContract_ = address(
             new PublicBeaconProxy(address(tokenContractsBeacon), "")
         );
 
         address admin = msg.sender;
 
-        console.log("new_ address ", newTokenContract_);
-        console.log("address(this) ", address(this));
-        console.log("admin ", admin);
         ITokenContract(newTokenContract_).__TokenContract_init(
             ITokenContract.TokenContractInitParams(
                 params_.tokenName,
