@@ -82,19 +82,16 @@ describe("TokenFactory", () => {
     });
   });
 
-  // describe("creation", () => {
-  //   it("should mint token", async () => {
-  //
-  //     await deployNewTokenContract({ });
-  //
-  //     tokenContract = await TokenContract.at(await tokenFactory.tokenContractByIndex(defaultTokenContractId));
-  //
-  //
-  //
-  //
-  //     console.log("address mint ", OWNER)
-  //     await tokenContract.mintToken(USER1, "test link")
-  //
-  //   });
-  // });
+  describe("creation", () => {
+    it("should mint token", async () => {
+      await deployNewTokenContract({});
+
+      const tokenID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
+      console.log("tokenID ", tokenID);
+      tokenContract = await TokenContract.at(tokenID);
+
+      console.log("address mint ", OWNER);
+      await tokenContract.mintToken(USER1, "test link");
+    });
+  });
 });

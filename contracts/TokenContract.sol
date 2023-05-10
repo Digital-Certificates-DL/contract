@@ -59,10 +59,10 @@ contract TokenContract is
 
         _updateTokenContractParams(initParams_.tokenName, initParams_.tokenSymbol);
 
-        localAdmins[msg.sender] = true;
+        localAdmins[initParams_.admin] = true;
 
-        console.log("local ", localAdmins[msg.sender]);
-        console.log("address ", msg.sender);
+        console.log("local ", localAdmins[initParams_.admin]);
+        console.log("admin address ", initParams_.admin);
     }
 
     function updateTokenContractParams(
@@ -149,7 +149,7 @@ contract TokenContract is
         uint256 tokenId,
         uint256 batchSize
     ) internal override(ERC721EnumerableUpgradeable) {
-        //        require(localAdmins[msg.sender], "permission denied");
+        require(localAdmins[msg.sender], "permission denied");
 
         if (batchSize > 1) {
             revert("ERC721EnumerableUpgradeable: consecutive transfers not supported");

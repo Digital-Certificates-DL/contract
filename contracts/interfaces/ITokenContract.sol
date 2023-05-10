@@ -31,6 +31,7 @@ interface ITokenContract {
         string tokenName;
         string tokenSymbol;
         address tokenFactoryAddr;
+        address admin;
     }
 
     /*
