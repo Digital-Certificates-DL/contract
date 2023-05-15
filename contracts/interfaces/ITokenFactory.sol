@@ -129,15 +129,6 @@ interface ITokenFactory {
     ) external view returns (BaseTokenContractInfo[] memory tokenContractsInfoArr_);
 
     /**
-     * @notice The function that returns information about the user's NFT
-     * @param userAddr_ the address of the user you want to get information from
-     * @return userNFTsInfoArr_ the array of BaseTokenContractInfo structures with basic information
-     */
-    function getUserNFTsInfo(
-        address userAddr_
-    ) external view returns (UserNFTsInfo[] memory userNFTsInfoArr_);
-
-    /**
      * @notice The function that returns the current admins array
      * @return admins array
      */

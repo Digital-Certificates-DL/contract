@@ -1,5 +1,4 @@
 const { accounts } = require("../scripts/utils/utils");
-const { ZERO_ADDR } = require("../scripts/utils/constants");
 
 const truffleAssert = require("truffle-assertions");
 const Reverter = require("./helpers/reverter");

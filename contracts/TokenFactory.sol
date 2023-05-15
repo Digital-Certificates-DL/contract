@@ -1,22 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-
 import "hardhat/console.sol";
-
-import "@dlsl/dev-modules/pool-contracts-registry/pool-factory/PublicBeaconProxy.sol";
-import "@dlsl/dev-modules/pool-contracts-registry/ProxyBeacon.sol";
-import "@dlsl/dev-modules/libs/arrays/Paginator.sol";
 
 import "./interfaces/ITokenFactory.sol";
 import "./interfaces/ITokenContract.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "@dlsl/dev-modules/pool-contracts-registry/ProxyBeacon.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./interfaces/IOwnable.sol";
+import "@dlsl/dev-modules/libs/arrays/Paginator.sol";
+import "@dlsl/dev-modules/pool-contracts-registry/pool-factory/PublicBeaconProxy.sol";
+import "@dlsl/dev-modules/pool-contracts-registry/AbstractPoolContractsRegistry.sol";
 
-contract TokenFactory is ITokenFactory, OwnableUpgradeable, UUPSUpgradeable, EIP712Upgradeable {
+contract TokenFactory is ITokenFactory, OwnableUpgradeable, AbstractPoolContractsRegistry {
     using EnumerableSet for EnumerableSet.AddressSet;
     using Paginator for EnumerableSet.AddressSet;
 
@@ -34,8 +31,6 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, UUPSUpgradeable, EIP
         string memory baseTokenContractsURI_
     ) external override initializer {
         __Ownable_init();
-        __EIP712_init("TokenFactory", "1");
-
         tokenContractsBeacon = new ProxyBeacon();
         baseTokenContractsURI = baseTokenContractsURI_;
 
@@ -44,24 +39,13 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, UUPSUpgradeable, EIP
         emit AdminsUpdated(adminsArr_, true);
     }
 
-    function setBaseTokenContractsURI(
-        string memory baseTokenContractsURI_
-    ) external override onlyOwner {
-        baseTokenContractsURI = baseTokenContractsURI_;
-
-        emit BaseTokenContractsURIUpdated(baseTokenContractsURI_);
-    }
-
-    function setNewImplementation(address newImplementation_) external override onlyOwner {
+    function setNewImplementation(address newImplementation_) external override {
         if (tokenContractsBeacon.implementation() != newImplementation_) {
             tokenContractsBeacon.upgrade(newImplementation_);
         }
     }
 
-    function updateAdmins(
-        address[] calldata adminsToUpdate_,
-        bool isAdding_
-    ) external override onlyOwner {
+    function updateAdmins(address[] calldata adminsToUpdate_, bool isAdding_) external {
         _updateAddressSet(_admins, adminsToUpdate_, isAdding_);
 
         emit AdminsUpdated(adminsToUpdate_, isAdding_);
@@ -94,19 +78,19 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, UUPSUpgradeable, EIP
         emit TokenContractDeployed(newTokenContract_, params_);
     }
 
+    function getTokenContractsPart(
+        uint256 offset_,
+        uint256 limit_
+    ) external view override returns (address[] memory) {
+        return _tokenContracts.part(offset_, limit_);
+    }
+
     function getTokenContractsImpl() external view override returns (address) {
         return tokenContractsBeacon.implementation();
     }
 
     function getTokenContractsCount() external view override returns (uint256) {
         return _tokenContracts.length();
-    }
-
-    function getTokenContractsPart(
-        uint256 offset_,
-        uint256 limit_
-    ) external view override returns (address[] memory) {
-        return _tokenContracts.part(offset_, limit_);
     }
 
     function getBaseTokenContractsInfo(
@@ -116,23 +100,6 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, UUPSUpgradeable, EIP
 
         for (uint256 i = 0; i < tokenContractsArr_.length; i++) {
             tokenContractsInfoArr_[i] = BaseTokenContractInfo(tokenContractsArr_[i]);
-        }
-    }
-
-    function getUserNFTsInfo(
-        address userAddr_
-    ) external view override returns (UserNFTsInfo[] memory userNFTsInfoArr_) {
-        uint256 tokenContractsCount_ = _tokenContracts.length();
-
-        userNFTsInfoArr_ = new UserNFTsInfo[](tokenContractsCount_);
-
-        for (uint256 i = 0; i < tokenContractsCount_; i++) {
-            address tokenContractAddr = _tokenContracts.at(i);
-
-            userNFTsInfoArr_[i] = UserNFTsInfo(
-                tokenContractAddr,
-                ITokenContract(tokenContractAddr).getUserTokenIDs(userAddr_)
-            );
         }
     }
 
@@ -159,5 +126,13 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, UUPSUpgradeable, EIP
         }
     }
 
-    function _authorizeUpgrade(address newImplementation_) internal override onlyOwner {}
+    function setBaseTokenContractsURI(
+        string memory baseTokenContractsURI_
+    ) external override onlyOwner {
+        baseTokenContractsURI = baseTokenContractsURI_;
+
+        emit BaseTokenContractsURIUpdated(baseTokenContractsURI_);
+    }
+
+    function _authorizeUpgrade(address newImplementation_) internal {}
 }

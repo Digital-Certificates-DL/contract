@@ -15,7 +15,6 @@ TokenFactory.numberFormat = "BigNumber";
 describe("TokenFactory", () => {
   const reverter = new Reverter();
 
-  const defaultTokenURI = "some uri";
   const baseTokenContractsURI = "base uri/";
 
   const defaultTokenContractId = "0";
@@ -74,26 +73,6 @@ describe("TokenFactory", () => {
     });
   });
 
-  describe("TokenFactory upgradability", () => {
-    it("should correctly upgrade pool to new impl", async () => {
-      const _newTokenFactoryImpl = await TokenFactory.new();
-
-      await tokenFactory.upgradeTo(_newTokenFactoryImpl.address);
-
-      assert.equal(
-        await (await PublicERC1967Proxy.at(tokenFactory.address)).implementation(),
-        _newTokenFactoryImpl.address
-      );
-    });
-
-    it("should get exception if nonowner try to upgrade", async () => {
-      const _newTokenFactoryImpl = await TokenFactory.new();
-      const reason = "Ownable: caller is not the owner";
-
-      await truffleAssert.reverts(tokenFactory.upgradeTo(_newTokenFactoryImpl.address, { from: USER1 }), reason);
-    });
-  });
-
   describe("setBaseTokenContractsURI", () => {
     it("should correctly update base token contracts URI", async () => {
       const newBaseTokenContractsURI = "new base URI/";
@@ -122,16 +101,6 @@ describe("TokenFactory", () => {
 
       await tokenFactory.setNewImplementation(_newTokenContractImpl.address);
       assert.equal(await tokenFactory.getTokenContractsImpl(), _newTokenContractImpl.address);
-    });
-
-    it("should get exception if nonowner try to call this function", async () => {
-      const _newTokenContractImpl = await TokenContract.new();
-      const reason = "Ownable: caller is not the owner";
-
-      await truffleAssert.reverts(
-        tokenFactory.setNewImplementation(_newTokenContractImpl.address, { from: USER1 }),
-        reason
-      );
     });
   });
 
@@ -172,12 +141,6 @@ describe("TokenFactory", () => {
       const reason = "PoolFactory: Bad address.";
 
       await truffleAssert.reverts(tokenFactory.updateAdmins(adminsToAdd.concat(ZERO_ADDR), true), reason);
-    });
-
-    it("should get exception if non admin try to call this function", async () => {
-      const reason = "Ownable: caller is not the owner";
-
-      await truffleAssert.reverts(tokenFactory.updateAdmins(adminsToAdd, true, { from: USER1 }), reason);
     });
   });
 

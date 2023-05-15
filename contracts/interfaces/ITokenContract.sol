@@ -60,31 +60,7 @@ interface ITokenContract {
     function __TokenContract_init(TokenContractInitParams calldata initParams_) external;
 
     /*
-     * @notice The function for updating token contract parameters
-     * @param newPrice_ the new price per one token
-     * @param newMinNFTFloorPrice_ the new minimal NFT floor price
-     * @param newTokenName_ the new token name
-     * @param newTokenSymbol_ the new token symbol
-     */
-    function updateTokenContractParams(
-        string memory newTokenName_,
-        string memory newTokenSymbol_
-    ) external;
-
-    /*
-     * @notice The function for updating all TokenContract parameters
-     * @param newPrice_ the new price per one token
-     * @param newMinNFTFloorPrice_ the new minimal NFT floor price
-     * @param newVoucherTokenContract_ the address of the new voucher token contract
-     * @param newVoucherTokensAmount_ the new voucher tokens amount
-     * @param newTokenName_ the new token name
-     * @param newTokenSymbol_ the new token symbol
-     */
-    function updateAllParams(string memory newTokenName_, string memory newTokenSymbol_) external;
-
-    /*
      * @param tokenURI_ the tokenURI string
-
      */
     function mintToken(address to, string memory tokenURI_) external returns (uint256);
 
