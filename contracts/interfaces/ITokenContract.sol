@@ -11,17 +11,6 @@ import "./ITokenFactory.sol";
  */
 interface ITokenContract {
     /*
-     * @notice The structure that stores information about the minted token
-     * @param tokenId the ID of the minted token
-     * @param mintedTokenPrice the price to be paid by the user
-     * @param tokenURI the token URI hash string
-     */
-    struct MintedTokenInfo {
-        uint256 tokenId;
-        string tokenURI;
-    }
-
-    /*
      * @notice The structure that stores TokenContract init params
      * @param tokenName the name of the collection (Uses in ERC721 and ERC712)
      * @param tokenSymbol the symbol of the collection (Uses in ERC721)
@@ -43,7 +32,7 @@ interface ITokenContract {
      * @param paymentTokenPrice the price in USD of the payment token
      * @param discount discount value applied
      */
-    event SuccessfullyMinted(address indexed recipient, MintedTokenInfo mintedTokenInfo);
+    event SuccessfullyMinted(address indexed recipient, uint256 tokenId, string tokenURI);
 
     /*
      * @notice The function for initializing contract variables

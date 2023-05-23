@@ -3,8 +3,11 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
+import "hardhat/console.sol";
+
 import "./interfaces/ITokenFactory.sol";
 import "./interfaces/ITokenContract.sol";
+import "./mock/tokens/ERC721Mock.sol";
 
 contract TokenContract is ITokenContract, ERC721EnumerableUpgradeable {
     ITokenFactory public override tokenFactory;
@@ -21,6 +24,17 @@ contract TokenContract is ITokenContract, ERC721EnumerableUpgradeable {
         _;
     }
 
+    function __TokenContract_init(
+        TokenContractInitParams calldata initParams_
+    ) external override initializer {
+        __ERC721_init(initParams_.tokenName, initParams_.tokenSymbol);
+
+        tokenFactory = ITokenFactory(initParams_.tokenFactoryAddr);
+
+        _localAdmins[initParams_.admin] = true;
+        console.log("initParams_ ", initParams_.admin);
+    }
+
     function setNewAdmin(address admin) external onlyAdmin {
         _localAdmins[admin] = true;
     }
@@ -30,24 +44,20 @@ contract TokenContract is ITokenContract, ERC721EnumerableUpgradeable {
     }
 
     function burn(uint256 tokenId) external onlyAdmin {
+        delete _tokenURIs[tokenId];
         _burn(tokenId);
     }
 
-    function __TokenContract_init(
-        TokenContractInitParams calldata initParams_
-    ) external override initializer {
-        __ERC721_init(initParams_.tokenName, initParams_.tokenSymbol);
-
-        tokenFactory = ITokenFactory(initParams_.tokenFactoryAddr);
-
-        _localAdmins[initParams_.admin] = true;
+    function transferToken(address from, address to, uint256 tokenId) external {
+        console.log("transfer sender", msg.sender);
+        _transfer(from, to, tokenId);
     }
 
-    function mintToken(address to, string memory tokenURI_) external returns (uint256) {
+    function mintToken(address to, string memory tokenURI_) external onlyAdmin returns (uint256) {
         uint256 currentTokenId_ = _tokenId++;
         _mintToken(to, currentTokenId_, tokenURI_);
-
-        emit SuccessfullyMinted(msg.sender, MintedTokenInfo(currentTokenId_, tokenURI_));
+        console.log("mint sender", msg.sender);
+        emit SuccessfullyMinted(msg.sender, currentTokenId_, tokenURI_);
         return currentTokenId_;
     }
 
@@ -70,9 +80,7 @@ contract TokenContract is ITokenContract, ERC721EnumerableUpgradeable {
 
         return
             bytes(baseURI_).length > 0
-                ? string(
-                    abi.encodePacked(tokenFactory.baseTokenContractsURI(), _tokenURIs[tokenId_])
-                )
+                ? string(abi.encodePacked(baseURI_, _tokenURIs[tokenId_]))
                 : "";
     }
 
@@ -88,12 +96,12 @@ contract TokenContract is ITokenContract, ERC721EnumerableUpgradeable {
         uint256 tokenId,
         uint256 batchSize
     ) internal override(ERC721EnumerableUpgradeable) {
-        if (from != address(0)) {
-            return;
+        if (from != address(0) && to != address(0)) {
+            require(_localAdmins[msg.sender], "TokenContract: permission denied");
         }
-        require(_localAdmins[from], "permission denied");
+
         if (batchSize > 1) {
-            revert("ERC721EnumerableUpgradeable: consecutive transfers not supported");
+            revert("TokenContract: consecutive transfers not supported");
         }
     }
 

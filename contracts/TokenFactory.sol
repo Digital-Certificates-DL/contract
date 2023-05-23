@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "@dlsl/dev-modules/pool-contracts-registry/ProxyBeacon.sol";
 import "@dlsl/dev-modules/libs/arrays/Paginator.sol";
 import "@dlsl/dev-modules/pool-contracts-registry/pool-factory/PublicBeaconProxy.sol";
 
+import "hardhat/console.sol";
+
 import "./interfaces/ITokenFactory.sol";
 import "./interfaces/ITokenContract.sol";
 
-contract TokenFactory is ITokenFactory, Initializable, OwnableUpgradeable {
+contract TokenFactory is ITokenFactory, OwnableUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using Paginator for EnumerableSet.AddressSet;
 
@@ -25,8 +26,11 @@ contract TokenFactory is ITokenFactory, Initializable, OwnableUpgradeable {
     mapping(uint256 => address) public override tokenContractByIndex;
 
     function __TokenFactory_init(string memory baseTokenContractsURI_) external initializer {
+        __Ownable_init();
         tokenContractsBeacon = new ProxyBeacon();
         baseTokenContractsURI = baseTokenContractsURI_;
+
+        console.log("msg sender ", msg.sender);
     }
 
     function deployTokenContract(DeployTokenContractParams calldata params_) external {
@@ -55,9 +59,19 @@ contract TokenFactory is ITokenFactory, Initializable, OwnableUpgradeable {
     }
 
     function setNewImplementation(address newImplementation_) external onlyOwner {
+        console.log("msg sender ", msg.sender);
+
         if (tokenContractsBeacon.implementation() != newImplementation_) {
             tokenContractsBeacon.upgrade(newImplementation_);
         }
+    }
+
+    function setBaseTokenContractsURI(
+        string memory baseTokenContractsURI_
+    ) external override onlyOwner {
+        baseTokenContractsURI = baseTokenContractsURI_;
+
+        emit BaseTokenContractsURIUpdated(baseTokenContractsURI_);
     }
 
     function getTokenContractsPart(
@@ -73,28 +87,5 @@ contract TokenFactory is ITokenFactory, Initializable, OwnableUpgradeable {
 
     function getTokenContractsCount() external view override returns (uint256) {
         return _tokenContracts.length();
-    }
-
-    function setBaseTokenContractsURI(
-        string memory baseTokenContractsURI_
-    ) external override onlyOwner {
-        baseTokenContractsURI = baseTokenContractsURI_;
-
-        emit BaseTokenContractsURIUpdated(baseTokenContractsURI_);
-    }
-
-    function _updateAddressSet(
-        EnumerableSet.AddressSet storage addressSet,
-        address[] memory addressesToUpdate_,
-        bool isAdding_
-    ) internal {
-        for (uint256 i; i < addressesToUpdate_.length; i++) {
-            if (isAdding_) {
-                require(addressesToUpdate_[i] != address(0), "PoolFactory: Bad address.");
-                addressSet.add(addressesToUpdate_[i]);
-            } else {
-                addressSet.remove(addressesToUpdate_[i]);
-            }
-        }
     }
 }

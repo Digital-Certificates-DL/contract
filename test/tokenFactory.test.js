@@ -52,7 +52,7 @@ describe("TokenFactory", () => {
 
     tokenFactory = await TokenFactory.at(_tokenFactoryProxy.address);
 
-    await tokenFactory.__TokenFactory_init([OWNER, ADMIN1, ADMIN2], baseTokenContractsURI);
+    await tokenFactory.__TokenFactory_init(baseTokenContractsURI);
 
     const _tokenContractImpl = await TokenContract.new();
 
@@ -69,7 +69,7 @@ describe("TokenFactory", () => {
     it("should get exception if try to call init function several times", async () => {
       const reason = "Initializable: contract is already initialized";
 
-      await truffleAssert.reverts(tokenFactory.__TokenFactory_init([ADMIN1, ADMIN2], baseTokenContractsURI), "");
+      await truffleAssert.reverts(tokenFactory.__TokenFactory_init(baseTokenContractsURI), reason);
     });
   });
 
@@ -104,46 +104,6 @@ describe("TokenFactory", () => {
     });
   });
 
-  describe("updateAdmins", () => {
-    let adminsToAdd;
-
-    beforeEach("setup", async () => {
-      adminsToAdd = [await accounts(7), await accounts(8), await accounts(9)];
-    });
-
-    it("should correctly add new tokens", async () => {
-      let expectedArr = [OWNER, ADMIN1, ADMIN2].concat(adminsToAdd);
-
-      const tx = await tokenFactory.updateAdmins(adminsToAdd, true);
-
-      assert.deepEqual(await tokenFactory.getAdmins(), expectedArr);
-
-      assert.equal(tx.receipt.logs[0].event, "AdminsUpdated");
-      assert.deepEqual(tx.receipt.logs[0].args.adminsToUpdate, adminsToAdd);
-      assert.equal(tx.receipt.logs[0].args.isAdding, true);
-    });
-
-    it("should correctly remove tokens", async () => {
-      await tokenFactory.updateAdmins(adminsToAdd, true);
-
-      let expectedArr = [OWNER, ADMIN1, ADMIN2].concat(adminsToAdd[2]);
-
-      const tx = await tokenFactory.updateAdmins(adminsToAdd.slice(0, 2), false);
-
-      assert.deepEqual(await tokenFactory.getAdmins(), expectedArr);
-
-      assert.equal(tx.receipt.logs[0].event, "AdminsUpdated");
-      assert.deepEqual(tx.receipt.logs[0].args.adminsToUpdate, adminsToAdd.slice(0, 2));
-      assert.equal(tx.receipt.logs[0].args.isAdding, false);
-    });
-
-    it("should get exception if pass zero address", async () => {
-      const reason = "PoolFactory: Bad address.";
-
-      await truffleAssert.reverts(tokenFactory.updateAdmins(adminsToAdd.concat(ZERO_ADDR), true), reason);
-    });
-  });
-
   describe("deployTokenContract", () => {
     it("should get exception if try to deploy tokenContaract with already existing tokenContractId", async () => {
       const reason = "TokenFactory: TokenContract with such id already exists.";
@@ -158,28 +118,6 @@ describe("TokenFactory", () => {
         }),
         reason
       );
-    });
-  });
-
-  describe("getBaseTokenContractsInfo", () => {
-    it("should return correct base token contracts info", async () => {
-      await deployNewTokenContract({});
-
-      let tokenContractId = "1";
-
-      await deployNewTokenContract({ tokenContractId_: tokenContractId });
-
-      tokenContractId = "2";
-
-      await deployNewTokenContract({ tokenContractId_: tokenContractId });
-
-      const tokenContractsArr = await tokenFactory.getTokenContractsPart(0, 10);
-
-      const result = await tokenFactory.getBaseTokenContractsInfo(tokenContractsArr);
-
-      for (let i = 0; i < tokenContractsArr.length; i++) {
-        assert.equal(result[i].tokenContractAddr, tokenContractsArr[i]);
-      }
     });
   });
 });

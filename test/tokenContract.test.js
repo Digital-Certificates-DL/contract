@@ -11,7 +11,7 @@ const PublicERC1967Proxy = artifacts.require("PublicERC1967Proxy");
 
 TokenFactory.numberFormat = "BigNumber";
 
-describe("TokenFactory", () => {
+describe("TokenContract", () => {
   const reverter = new Reverter();
 
   const baseTokenContractsURI = "ipfs://";
@@ -47,10 +47,9 @@ describe("TokenFactory", () => {
 
     tokenFactory = await TokenFactory.at(_tokenFactoryProxy.address);
 
-    await tokenFactory.__TokenFactory_init([OWNER, ADMIN1, ADMIN2], baseTokenContractsURI);
+    await tokenFactory.__TokenFactory_init(baseTokenContractsURI);
 
     const _tokenContractImpl = await TokenContract.new();
-
     await tokenFactory.setNewImplementation(_tokenContractImpl.address);
 
     assert.equal(await tokenFactory.getTokenContractsImpl(), _tokenContractImpl.address);
@@ -108,9 +107,10 @@ describe("TokenFactory", () => {
       await tokenContract.mintToken(USER1, "test", { from: OWNER });
       assert.equal(await tokenContract.tokenURI(0), "ipfs://test");
       assert.equal(await tokenContract.balanceOf(USER1), "1");
+      await tokenContract.burn(0);
     });
     it("shouldn't mint token", async () => {
-      const reason = "permission denied";
+      const reason = "TokenContract: Only admin can call this function";
       await deployNewTokenContract({});
       const tokenID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
       const tokenContract = await TokenContract.at(tokenID);
@@ -127,7 +127,7 @@ describe("TokenFactory", () => {
 
         await tokenContract.mintToken(USER1, "test");
 
-        await tokenContract.transferToken(USER1, OWNER, 0), { from: OWNER };
+        await tokenContract.transferToken(USER1, OWNER, 0, { from: OWNER });
 
         assert.equal(await tokenContract.balanceOf(USER1), "0");
         assert.equal(await tokenContract.balanceOf(OWNER), "1");
