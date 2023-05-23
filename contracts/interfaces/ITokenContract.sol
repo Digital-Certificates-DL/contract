@@ -35,14 +35,6 @@ interface ITokenContract {
     }
 
     /*
-     * @notice This event is emitted when the TokenContract parameters are updated
-     * @param newPrice the new price per token for this collection
-     * @param tokenName the new token name
-     * @param tokenSymbol the new token symbol
-     */
-    event TokenContractParamsUpdated(string tokenName, string tokenSymbol);
-
-    /*
      * @notice This event is emitted when the user has successfully minted a new token
      * @param recipient the address of the user who received the token and who paid for it
      * @param mintedTokenInfo the MintedTokenInfo struct with information about minted token

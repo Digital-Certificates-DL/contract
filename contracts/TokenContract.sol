@@ -5,9 +5,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721Enumer
 
 import "./interfaces/ITokenFactory.sol";
 import "./interfaces/ITokenContract.sol";
-import "./interfaces/IOwnable.sol";
 
-contract TokenContract is ITokenContract, IOwnable, ERC721EnumerableUpgradeable {
+contract TokenContract is ITokenContract, ERC721EnumerableUpgradeable {
     ITokenFactory public override tokenFactory;
 
     uint256 internal _tokenId;
@@ -20,6 +19,18 @@ contract TokenContract is ITokenContract, IOwnable, ERC721EnumerableUpgradeable 
     modifier onlyAdmin() {
         require(_localAdmins[msg.sender], "TokenContract: Only admin can call this function.");
         _;
+    }
+
+    function setNewAdmin(address admin) external onlyAdmin {
+        _localAdmins[admin] = true;
+    }
+
+    function deleteAdmin(address admin) external onlyAdmin {
+        delete _localAdmins[admin];
+    }
+
+    function burn(uint256 tokenId) external onlyAdmin {
+        _burn(tokenId);
     }
 
     function __TokenContract_init(
@@ -52,10 +63,6 @@ contract TokenContract is ITokenContract, IOwnable, ERC721EnumerableUpgradeable 
         }
     }
 
-    function owner() public view override returns (address) {
-        return IOwnable(address(tokenFactory)).owner();
-    }
-
     function tokenURI(uint256 tokenId_) public view override returns (string memory) {
         require(_exists(tokenId_), "TokenContract: URI query for nonexistent token.");
 
@@ -71,7 +78,6 @@ contract TokenContract is ITokenContract, IOwnable, ERC721EnumerableUpgradeable 
 
     function _mintToken(address to, uint256 mintTokenId_, string memory tokenURI_) internal {
         _mint(to, mintTokenId_);
-
         _tokenURIs[mintTokenId_] = tokenURI_;
         existingTokenURIs[tokenURI_] = true;
     }
@@ -82,7 +88,10 @@ contract TokenContract is ITokenContract, IOwnable, ERC721EnumerableUpgradeable 
         uint256 tokenId,
         uint256 batchSize
     ) internal override(ERC721EnumerableUpgradeable) {
-        require(_localAdmins[msg.sender], "permission denied");
+        if (from != address(0)) {
+            return;
+        }
+        require(_localAdmins[from], "permission denied");
         if (batchSize > 1) {
             revert("ERC721EnumerableUpgradeable: consecutive transfers not supported");
         }
@@ -90,21 +99,5 @@ contract TokenContract is ITokenContract, IOwnable, ERC721EnumerableUpgradeable 
 
     function _baseURI() internal view override returns (string memory) {
         return tokenFactory.baseTokenContractsURI();
-    }
-
-    function setNewAdmin(address admin) external onlyAdmin {
-        _localAdmins[admin] = true;
-    }
-
-    function deleteAdmin(address admin) external onlyAdmin {
-        delete _localAdmins[admin];
-    }
-
-    function transferToken(address from, address to, uint256 tokenId) external {
-        _transfer(from, to, tokenId);
-    }
-
-    function burn(uint256 tokenId) external {
-        _burn(tokenId);
     }
 }

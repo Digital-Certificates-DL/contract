@@ -46,13 +46,7 @@ interface ITokenFactory {
     event BaseTokenContractsURIUpdated(string newBaseTokenContractsURI);
 
     /**
-     * @notice This event is emitted when the list of admins is updated
-     * @param adminsToUpdate the array of addresses of admins to update
-     * @param isAdding flag indicating that admins have been added or removed
-     */
-    event AdminsUpdated(address[] adminsToUpdate, bool isAdding);
-
-    /**
+     * @notice This event is emitted during the creation of a new TokenContract
      * @notice This event is emitted during the creation of a new TokenContract
      * @param newTokenContractAddr the address of the created token contract
      * @param tokenContractParams struct with the token contract params
@@ -61,16 +55,6 @@ interface ITokenFactory {
         address newTokenContractAddr,
         DeployTokenContractParams tokenContractParams
     );
-
-    /**
-     * @notice The function for initializing contract variables
-     * @param adminsArr_ the initial admins array
-     * @param baseTokenContractsURI_ the initial base token contracts URI string
-     */
-    function __TokenFactory_init(
-        address[] memory adminsArr_,
-        string memory baseTokenContractsURI_
-    ) external;
 
     /**
      * @notice The function to update the baseTokenContractsURI parameter
@@ -85,14 +69,6 @@ interface ITokenFactory {
      * @param newImplementation_ the new TokenContract implementation
      */
     function setNewImplementation(address newImplementation_) external;
-
-    /*
-     * @notice The function to update the admins list
-     * @dev Only OWNER can call this function
-     * @param adminsToUpdate_ the array of admins to update
-     * @param isAdding_ flag indicating that admins have been added or removed
-     */
-    function updateAdmins(address[] calldata adminsToUpdate_, bool isAdding_) external;
 
     /*
      * @notice The function for deploying new instances of TokenContract
@@ -118,28 +94,6 @@ interface ITokenFactory {
      * @return address of the token contract
      */
     function tokenContractByIndex(uint256 tokenContractId_) external view returns (address);
-
-    /**
-     * @notice The function that returns basic token contracts information for passed addresses
-     * @param tokenContractsArr_ the array of addresses for which you want to get information
-     * @return tokenContractsInfoArr_ athe array of BaseTokenContractInfo structures with basic information
-     */
-    function getBaseTokenContractsInfo(
-        address[] memory tokenContractsArr_
-    ) external view returns (BaseTokenContractInfo[] memory tokenContractsInfoArr_);
-
-    /**
-     * @notice The function that returns the current admins array
-     * @return admins array
-     */
-    function getAdmins() external view returns (address[] memory);
-
-    /**
-     * @notice The function to check if the passed address is an admin
-     * @param userAddr_ the address of the user you want to get information from
-     * @return true if the passed address is an admin address, false otherwise
-     */
-    function isAdmin(address userAddr_) external view returns (bool);
 
     /**
      * @notice The function that returns the address of the TokenContracts implementation

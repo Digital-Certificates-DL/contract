@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.9;
 
-import "hardhat/console.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
+import "@dlsl/dev-modules/pool-contracts-registry/ProxyBeacon.sol";
+import "@dlsl/dev-modules/libs/arrays/Paginator.sol";
+import "@dlsl/dev-modules/pool-contracts-registry/pool-factory/PublicBeaconProxy.sol";
 
 import "./interfaces/ITokenFactory.sol";
 import "./interfaces/ITokenContract.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@dlsl/dev-modules/pool-contracts-registry/ProxyBeacon.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./interfaces/IOwnable.sol";
-import "@dlsl/dev-modules/libs/arrays/Paginator.sol";
-import "@dlsl/dev-modules/pool-contracts-registry/pool-factory/PublicBeaconProxy.sol";
-import "@dlsl/dev-modules/pool-contracts-registry/AbstractPoolContractsRegistry.sol";
 
-contract TokenFactory is ITokenFactory, OwnableUpgradeable, AbstractPoolContractsRegistry {
+contract TokenFactory is ITokenFactory, Initializable, OwnableUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using Paginator for EnumerableSet.AddressSet;
 
@@ -22,33 +21,12 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, AbstractPoolContract
     string public override baseTokenContractsURI;
 
     EnumerableSet.AddressSet internal _tokenContracts;
-    EnumerableSet.AddressSet internal _admins;
 
     mapping(uint256 => address) public override tokenContractByIndex;
 
-    function __TokenFactory_init(
-        address[] memory adminsArr_,
-        string memory baseTokenContractsURI_
-    ) external override initializer {
-        __Ownable_init();
+    function __TokenFactory_init(string memory baseTokenContractsURI_) external initializer {
         tokenContractsBeacon = new ProxyBeacon();
         baseTokenContractsURI = baseTokenContractsURI_;
-
-        _updateAddressSet(_admins, adminsArr_, true);
-
-        emit AdminsUpdated(adminsArr_, true);
-    }
-
-    function setNewImplementation(address newImplementation_) external override {
-        if (tokenContractsBeacon.implementation() != newImplementation_) {
-            tokenContractsBeacon.upgrade(newImplementation_);
-        }
-    }
-
-    function updateAdmins(address[] calldata adminsToUpdate_, bool isAdding_) external {
-        _updateAddressSet(_admins, adminsToUpdate_, isAdding_);
-
-        emit AdminsUpdated(adminsToUpdate_, isAdding_);
     }
 
     function deployTokenContract(DeployTokenContractParams calldata params_) external {
@@ -61,14 +39,12 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, AbstractPoolContract
             new PublicBeaconProxy(address(tokenContractsBeacon), "")
         );
 
-        address admin = msg.sender;
-
         ITokenContract(newTokenContract_).__TokenContract_init(
             ITokenContract.TokenContractInitParams(
                 params_.tokenName,
                 params_.tokenSymbol,
                 address(this),
-                admin
+                msg.sender
             )
         );
 
@@ -76,6 +52,12 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, AbstractPoolContract
         tokenContractByIndex[params_.tokenContractId] = newTokenContract_;
 
         emit TokenContractDeployed(newTokenContract_, params_);
+    }
+
+    function setNewImplementation(address newImplementation_) external onlyOwner {
+        if (tokenContractsBeacon.implementation() != newImplementation_) {
+            tokenContractsBeacon.upgrade(newImplementation_);
+        }
     }
 
     function getTokenContractsPart(
@@ -93,22 +75,12 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, AbstractPoolContract
         return _tokenContracts.length();
     }
 
-    function getBaseTokenContractsInfo(
-        address[] memory tokenContractsArr_
-    ) external view override returns (BaseTokenContractInfo[] memory tokenContractsInfoArr_) {
-        tokenContractsInfoArr_ = new BaseTokenContractInfo[](tokenContractsArr_.length);
+    function setBaseTokenContractsURI(
+        string memory baseTokenContractsURI_
+    ) external override onlyOwner {
+        baseTokenContractsURI = baseTokenContractsURI_;
 
-        for (uint256 i = 0; i < tokenContractsArr_.length; i++) {
-            tokenContractsInfoArr_[i] = BaseTokenContractInfo(tokenContractsArr_[i]);
-        }
-    }
-
-    function getAdmins() external view override returns (address[] memory) {
-        return _admins.values();
-    }
-
-    function isAdmin(address userAddr_) public view override returns (bool) {
-        return _admins.contains(userAddr_);
+        emit BaseTokenContractsURIUpdated(baseTokenContractsURI_);
     }
 
     function _updateAddressSet(
@@ -125,14 +97,4 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable, AbstractPoolContract
             }
         }
     }
-
-    function setBaseTokenContractsURI(
-        string memory baseTokenContractsURI_
-    ) external override onlyOwner {
-        baseTokenContractsURI = baseTokenContractsURI_;
-
-        emit BaseTokenContractsURIUpdated(baseTokenContractsURI_);
-    }
-
-    function _authorizeUpgrade(address newImplementation_) internal {}
 }
