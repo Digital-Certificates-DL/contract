@@ -4,14 +4,12 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "@dlsl/dev-modules/pool-contracts-registry/ProxyBeacon.sol";
 import "@dlsl/dev-modules/libs/arrays/Paginator.sol";
-import "@dlsl/dev-modules/pool-contracts-registry/pool-factory/PublicBeaconProxy.sol";
-
-import "hardhat/console.sol";
 
 import "./interfaces/ITokenFactory.sol";
 import "./interfaces/ITokenContract.sol";
+import "@dlsl/dev-modules/contracts-registry/pools/proxy/ProxyBeacon.sol";
+import "@dlsl/dev-modules/contracts-registry/pools/pool-factory/proxy/PublicBeaconProxy.sol";
 
 contract TokenFactory is ITokenFactory, OwnableUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -29,8 +27,6 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable {
         __Ownable_init();
         tokenContractsBeacon = new ProxyBeacon();
         baseTokenContractsURI = baseTokenContractsURI_;
-
-        console.log("msg sender ", msg.sender);
     }
 
     function deployTokenContract(DeployTokenContractParams calldata params_) external {
@@ -59,8 +55,6 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable {
     }
 
     function setNewImplementation(address newImplementation_) external onlyOwner {
-        console.log("msg sender ", msg.sender);
-
         if (tokenContractsBeacon.implementation() != newImplementation_) {
             tokenContractsBeacon.upgrade(newImplementation_);
         }

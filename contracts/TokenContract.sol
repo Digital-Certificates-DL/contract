@@ -3,11 +3,8 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
-import "hardhat/console.sol";
-
 import "./interfaces/ITokenFactory.sol";
 import "./interfaces/ITokenContract.sol";
-import "./mock/tokens/ERC721Mock.sol";
 
 contract TokenContract is ITokenContract, ERC721EnumerableUpgradeable {
     ITokenFactory public override tokenFactory;
@@ -32,7 +29,6 @@ contract TokenContract is ITokenContract, ERC721EnumerableUpgradeable {
         tokenFactory = ITokenFactory(initParams_.tokenFactoryAddr);
 
         _localAdmins[initParams_.admin] = true;
-        console.log("initParams_ ", initParams_.admin);
     }
 
     function setNewAdmin(address admin) external onlyAdmin {
@@ -49,14 +45,12 @@ contract TokenContract is ITokenContract, ERC721EnumerableUpgradeable {
     }
 
     function transferToken(address from, address to, uint256 tokenId) external {
-        console.log("transfer sender", msg.sender);
         _transfer(from, to, tokenId);
     }
 
     function mintToken(address to, string memory tokenURI_) external onlyAdmin returns (uint256) {
         uint256 currentTokenId_ = _tokenId++;
         _mintToken(to, currentTokenId_, tokenURI_);
-        console.log("mint sender", msg.sender);
         emit SuccessfullyMinted(msg.sender, currentTokenId_, tokenURI_);
         return currentTokenId_;
     }

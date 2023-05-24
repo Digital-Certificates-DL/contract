@@ -23,7 +23,6 @@ module.exports = async (deployer, logger) => {
   console.log(`TokenFactory implementation address ----- ${tokenFactoryImpl.address}`);
   console.log(`TokenFactory address ----- ${tokenFactory.address}`);
   console.log(`TokenFactory deployed with next params
-    ADMINS: ${tokenFactoryParams.admins}
     BASE_TOKEN_CONTRACTS_URI: ${tokenFactoryParams.baseTokenContractsURI}
   `);
 
