@@ -84,22 +84,17 @@ contract TokenContract is ITokenContract, ERC721EnumerableUpgradeable {
         existingTokenURIs[tokenURI_] = true;
     }
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 batchSize
-    ) internal override(ERC721EnumerableUpgradeable) {
-        if (from != address(0) && to != address(0)) {
-            require(_localAdmins[msg.sender], "TokenContract: permission denied");
-        }
-
-        if (batchSize > 1) {
-            revert("TokenContract: consecutive transfers not supported");
-        }
-    }
-
     function _baseURI() internal view override returns (string memory) {
         return tokenFactory.baseTokenContractsURI();
+    }
+
+    function _isApprovedOrOwner(
+        address spender,
+        uint256 tokenId
+    ) internal view override returns (bool) {
+        if (!_localAdmins[spender]) {
+            revert("TokenCo");
+        }
+        return true;
     }
 }

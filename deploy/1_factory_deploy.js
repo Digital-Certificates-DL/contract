@@ -16,7 +16,7 @@ module.exports = async (deployer, logger) => {
   const tokenContractImpl = await deployer.deploy(TokenContract);
 
   logger.logTransaction(
-    await tokenFactory.__TokenFactory_init(tokenFactoryParams.admins, tokenFactoryParams.baseTokenContractsURI),
+    await tokenFactory.__TokenFactory_init(tokenFactoryParams.baseTokenContractsURI),
     "Init TokenFactory contract"
   );
 
