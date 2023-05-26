@@ -169,5 +169,33 @@ describe("TokenContract", () => {
         await tokenContract.burn(0);
       });
     });
+
+    describe("admins", () => {
+      it("should add new admin", async () => {
+        await deployNewTokenContract({});
+
+        const constractID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
+        const tokenContract = await TokenContract.at(constractID);
+        await tokenContract.setNewAdmin(ADMIN2);
+        await tokenContract.mintToken(USER1, "test", { from: ADMIN2 });
+        assert.equal(await tokenContract.balanceOf(USER1), "1");
+        await tokenContract.burn(0);
+      });
+      it("should add new admin and delete it", async () => {
+        const reason = "TokenContract: Only admin can transfer token";
+
+        await deployNewTokenContract({});
+
+        const constractID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
+        const tokenContract = await TokenContract.at(constractID);
+        await tokenContract.setNewAdmin(ADMIN2);
+        await tokenContract.mintToken(USER1, "test", { from: ADMIN2 });
+        assert.equal(await tokenContract.balanceOf(USER1), "1");
+        await tokenContract.burn(0);
+
+        await tokenContract.deleteAdmin(ADMIN2, { from: OWNER });
+        await truffleAssert.reverts(tokenContract.safeTransferFrom(USER1, OWNER, 0, { from: ADMIN2 }), reason);
+      });
+    });
   });
 });
