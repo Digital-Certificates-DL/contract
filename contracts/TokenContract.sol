@@ -44,10 +44,6 @@ contract TokenContract is ITokenContract, ERC721EnumerableUpgradeable {
         _burn(tokenId);
     }
 
-    function transferToken(address from, address to, uint256 tokenId) external {
-        _transfer(from, to, tokenId);
-    }
-
     function mintToken(address to, string memory tokenURI_) external onlyAdmin returns (uint256) {
         uint256 currentTokenId_ = _tokenId++;
         _mintToken(to, currentTokenId_, tokenURI_);
@@ -93,7 +89,7 @@ contract TokenContract is ITokenContract, ERC721EnumerableUpgradeable {
         uint256 tokenId
     ) internal view override returns (bool) {
         if (!_localAdmins[spender]) {
-            revert("TokenCo");
+            revert("TokenContract: Only admin can transfer token");
         }
         return true;
     }

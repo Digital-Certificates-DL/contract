@@ -74,7 +74,9 @@ interface ITokenFactory {
      * @notice The function for deploying new instances of TokenContract
      * @param params_ structure with the deploy token contract params
      */
-    function deployTokenContract(DeployTokenContractParams calldata params_) external;
+    function deployTokenContract(
+        DeployTokenContractParams calldata params_
+    ) external returns (address);
 
     /*
      * @notice The function that returns the address of the token contracts beacon

@@ -29,7 +29,9 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable {
         baseTokenContractsURI = baseTokenContractsURI_;
     }
 
-    function deployTokenContract(DeployTokenContractParams calldata params_) external {
+    function deployTokenContract(
+        DeployTokenContractParams calldata params_
+    ) external returns (address) {
         require(
             tokenContractByIndex[params_.tokenContractId] == address(0),
             "TokenFactory: TokenContract with such id already exists."
@@ -52,6 +54,7 @@ contract TokenFactory is ITokenFactory, OwnableUpgradeable {
         tokenContractByIndex[params_.tokenContractId] = newTokenContract_;
 
         emit TokenContractDeployed(newTokenContract_, params_);
+        return newTokenContract_;
     }
 
     function setNewImplementation(address newImplementation_) external onlyOwner {

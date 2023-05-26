@@ -2,6 +2,8 @@ const { accounts } = require("../scripts/utils/utils");
 
 const truffleAssert = require("truffle-assertions");
 const Reverter = require("./helpers/reverter");
+const Web3Utils = require("web3-utils");
+
 const { assert } = require("chai");
 
 const TokenFactory = artifacts.require("TokenFactory");
@@ -96,6 +98,26 @@ describe("TokenContract", () => {
       assert.equal(await tokenContract.balanceOf(USER1), "1");
     });
   });
+  describe("getUserTokenIDs", () => {
+    it("should mint correctly and return correct getUserTokenIDs", async () => {
+      await deployNewTokenContract({});
+
+      const tokenID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
+
+      const tokenContract = await TokenContract.at(tokenID);
+
+      assert.equal(await tokenContract.balanceOf(USER1), "0");
+      await tokenContract.mintToken(ADMIN2, "test", { from: OWNER });
+      await tokenContract.mintToken(USER1, "test", { from: OWNER });
+      await tokenContract.mintToken(ADMIN2, "test", { from: OWNER });
+
+      assert.equal(await tokenContract.tokenURI(0), "ipfs://test");
+      assert.equal(await tokenContract.balanceOf(USER1), "1");
+      const tokensIDsBN = await tokenContract.getUserTokenIDs(USER1);
+      const tokensIDs = tokensIDsBN.map((bn) => Web3Utils.toNumber(bn));
+      assert.equal(JSON.stringify(tokensIDs), "[1]");
+    });
+  });
   describe("mint token: check  permission", () => {
     it("should mint token", async () => {
       await deployNewTokenContract({});
@@ -127,14 +149,14 @@ describe("TokenContract", () => {
 
         await tokenContract.mintToken(USER1, "test");
 
-        await tokenContract.transferToken(USER1, OWNER, 0, { from: OWNER });
+        await tokenContract.safeTransferFrom(USER1, OWNER, 0, { from: OWNER });
 
         assert.equal(await tokenContract.balanceOf(USER1), "0");
         assert.equal(await tokenContract.balanceOf(OWNER), "1");
         await tokenContract.burn(0);
       });
       it("shouldn't transfer", async () => {
-        const reason = "permission denied";
+        const reason = "TokenContract: Only admin can transfer token";
         await deployNewTokenContract({});
 
         const constractID = await tokenFactory.tokenContractByIndex(defaultTokenContractId);
@@ -142,7 +164,7 @@ describe("TokenContract", () => {
 
         await tokenContract.mintToken(USER1, "test");
 
-        await truffleAssert.reverts(tokenContract.transferToken(USER1, OWNER, 0, { from: ADMIN2 }), reason);
+        await truffleAssert.reverts(tokenContract.safeTransferFrom(USER1, OWNER, 0, { from: ADMIN2 }), reason);
 
         await tokenContract.burn(0);
       });

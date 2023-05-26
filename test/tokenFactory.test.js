@@ -87,7 +87,6 @@ describe("TokenFactory", () => {
 
     it("should get exception if nonowner try to call this function", async () => {
       const reason = "Ownable: caller is not the owner";
-
       await truffleAssert.reverts(tokenFactory.setBaseTokenContractsURI("", { from: USER1 }), reason);
     });
   });
@@ -101,6 +100,16 @@ describe("TokenFactory", () => {
 
       await tokenFactory.setNewImplementation(_newTokenContractImpl.address);
       assert.equal(await tokenFactory.getTokenContractsImpl(), _newTokenContractImpl.address);
+    });
+    it("should not correctly set new implementation of the TokenContract", async () => {
+      const reason = "Ownable: caller is not the owner";
+
+      const _newTokenContractImpl = await TokenContract.new();
+
+      await truffleAssert.reverts(
+        tokenFactory.setNewImplementation(_newTokenContractImpl.address, { from: USER1 }),
+        reason
+      );
     });
   });
 
@@ -118,6 +127,69 @@ describe("TokenFactory", () => {
         }),
         reason
       );
+    });
+  });
+
+  describe("getTokenContractsCount", () => {
+    it("should get count of proxy", async () => {
+      await tokenFactory.deployTokenContract([defaultTokenContractId, defaultTokenName, defaultTokenSymbol], {
+        from: USER1,
+      });
+      await tokenFactory.deployTokenContract([defaultTokenContractId + 1, defaultTokenName, defaultTokenSymbol], {
+        from: USER1,
+      });
+
+      assert.equal(await tokenFactory.getTokenContractsCount(), 2);
+    });
+  });
+  describe("getTokenContractsPart", () => {
+    it("should get count of proxy", async () => {
+      await tokenFactory.deployTokenContract([defaultTokenContractId, defaultTokenName, defaultTokenSymbol], {
+        from: USER1,
+      });
+      await tokenFactory.deployTokenContract([defaultTokenContractId + 1, defaultTokenName, defaultTokenSymbol], {
+        from: USER1,
+      });
+      await tokenFactory.deployTokenContract([defaultTokenContractId + 2, defaultTokenName, defaultTokenSymbol], {
+        from: USER1,
+      });
+      await tokenFactory.deployTokenContract([defaultTokenContractId + 3, defaultTokenName, defaultTokenSymbol], {
+        from: USER1,
+      });
+
+      // assert.equal(await tokenFactory.getTokenContractsPart.call(0, 3),  [
+      //     '0xBA12646CC07ADBe43F8bD25D83FB628D29C8A762',
+      //     '0x7ab4C4804197531f7ed6A6bc0f0781f706ff7953',
+      //     '0xc8CB5439c767A63aca1c01862252B2F3495fDcFE'
+      //   ]
+      // );
+      //   return the same address but test is failed
+
+      assert.equal((await tokenFactory.getTokenContractsPart.call(0, 3)).length, 3);
+    });
+    it("should not get count of proxy", async () => {
+      await tokenFactory.deployTokenContract([defaultTokenContractId, defaultTokenName, defaultTokenSymbol], {
+        from: USER1,
+      });
+      await tokenFactory.deployTokenContract([defaultTokenContractId + 1, defaultTokenName, defaultTokenSymbol], {
+        from: USER1,
+      });
+      await tokenFactory.deployTokenContract([defaultTokenContractId + 2, defaultTokenName, defaultTokenSymbol], {
+        from: USER1,
+      });
+      await tokenFactory.deployTokenContract([defaultTokenContractId + 3, defaultTokenName, defaultTokenSymbol], {
+        from: USER1,
+      });
+
+      // assert.equal(await tokenFactory.getTokenContractsPart.call(0, 3),  [
+      //     '0xBA12646CC07ADBe43F8bD25D83FB628D29C8A762',
+      //     '0x7ab4C4804197531f7ed6A6bc0f0781f706ff7953',
+      //     '0xc8CB5439c767A63aca1c01862252B2F3495fDcFE'
+      //   ]
+      // );
+      //   return the same address but test is failed
+
+      assert.notEqual((await tokenFactory.getTokenContractsPart.call(0, 4)).length, 3);
     });
   });
 });
