@@ -3,7 +3,7 @@ const setNextBlockTime = async (time) => {
 };
 
 const setTime = async (time) => {
-  await setNextBlockTime(time);
+  await network.provider.send("evm_setNextBlockTimestamp", [time]);
   await mine();
 };
 
